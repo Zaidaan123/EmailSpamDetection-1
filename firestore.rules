@@ -1,0 +1,70 @@
+/**
+ * @fileoverview Firestore Security Rules for GuardianMail.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model. Users can only
+ * access their own data, ensuring privacy and data isolation.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores core user information.
+ * - /users/{userId}/settings/{settingId}: Stores user-specific settings.
+ *
+ * Key Security Decisions:
+ * - User listing is disallowed for privacy.
+ * - Settings are owned by the user and only accessible to them.
+ *
+ * Denormalization for Authorization:
+ *  The data structure already aligns with the authorization strategy, using path-based ownership to avoid costly `get()` calls.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Secure user profiles. Only the authenticated user can read or write their own profile.
+     * @path /users/{userId}
+     * @allow (get, update, delete) User 'S85JUbqzWUYxx2bHf1xOPTurDCi1' can read their own profile at /users/S85JUbqzWUYxx2bHf1xOPTurDCi1.
+     * @allow (create) User 'S85JUbqzWUYxx2bHf1xOPTurDCi1' can create their own profile at /users/S85JUbqzWUYxx2bHf1xOPTurDCi1.
+     * @deny (get) User 'anotherUser' cannot read user 'S85JUbqzWUYxx2bHf1xOPTurDCi1''s profile.
+     * @deny (update) User 'anotherUser' cannot update user 'S85JUbqzWUYxx2bHf1xOPTurDCi1''s profile.
+     * @principle Enforces document ownership for writes.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secure user settings. Only the authenticated user can read or write their own settings.
+     * @path /users/{userId}/settings/{settingId}
+     * @allow (get, update, delete) User 'S85JUbqzWUYxx2bHf1xOPTurDCi1' can read their own 'ai' setting at /users/S85JUbqzWUYxx2bHf1xOPTurDCi1/settings/ai.
+     * @allow (create) User 'S85JUbqzWUYxx2bHf1xOPTurDCi1' can create their own 'ai' setting at /users/S85JUbqzWUYxx2bHf1xOPTurDCi1/settings/ai.
+     * @deny (get) User 'anotherUser' cannot read user 'S85JUbqzWUYxx2bHf1xOPTurDCi1''s 'ai' setting.
+     * @deny (update) User 'anotherUser' cannot update user 'S85JUbqzWUYxx2bHf1xOPTurDCi1''s 'ai' setting.
+     * @principle Restricts access to a user's own settings data.
+     */
+    match /users/{userId}/settings/{settingId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    // ---- Helper functions ----
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+  }
+}

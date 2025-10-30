@@ -1,0 +1,106 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the GuardianMail application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "username": {
+          "type": "string",
+          "description": "The user's chosen username."
+        },
+        "registrationDate": {
+          "type": "string",
+          "description": "The date and time when the user registered.",
+          "format": "date-time"
+        },
+        "profileImageUrl": {
+          "type": "string",
+          "description": "URL of the user's profile image.",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "username",
+        "registrationDate"
+      ]
+    },
+    "UserSettings": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User Settings",
+      "type": "object",
+      "description": "Stores user-specific settings for the GuardianMail application.",
+      "properties": {
+        "sensitivity": {
+          "type": "number",
+          "description": "The sensitivity level for phishing detection, from 0 to 100."
+        },
+        "replyTone": {
+          "type": "string",
+          "description": "The desired tone for AI-assisted replies.",
+          "enum": ["formal", "neutral", "casual"]
+        }
+      },
+      "required": ["sensitivity", "replyTone"]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information. Path-based ownership ensures only the authenticated user (userId) can access their own data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user. This is used for path-based authorization."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/settings/{settingId}",
+        "definition": {
+          "entityName": "UserSettings",
+          "schema": {
+            "$ref": "#/backend/entities/UserSettings"
+          },
+          "description": "Stores individual user settings documents, like 'ai'. Access is restricted to the owner.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "settingId",
+              "description": "The unique identifier for the setting document (e.g., 'ai')."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The data structure prioritizes authorization independence and clarity for security rules. User data is stored under `/users/{userId}` for path-based ownership. A subcollection for settings `/users/{userId}/settings/{settingId}` allows for granular control and ensures settings can be managed without affecting the main user document. This eliminates the need for complex `get()` calls in security rules, as access control is directly tied to the user's ID."
+  }
+}
