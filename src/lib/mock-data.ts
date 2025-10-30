@@ -1,4 +1,3 @@
-
 import type { MockEmail, InboxEmail, SentEmail } from '@/lib/types';
 
 export const mockEmails: MockEmail[] = [
@@ -59,6 +58,7 @@ export const inboxEmails: InboxEmail[] = [
       starred: false,
       status: 'inbox',
       tags: ['work', 'project'],
+      riskLevel: 'safe', // FIXED: Added missing property
     },
     {
       id: '2',
@@ -71,6 +71,7 @@ export const inboxEmails: InboxEmail[] = [
       starred: true,
       status: 'inbox',
       tags: ['social'],
+      riskLevel: 'safe', // FIXED: Added missing property
     },
     {
       id: '3',
@@ -83,30 +84,33 @@ export const inboxEmails: InboxEmail[] = [
       starred: false,
       status: 'inbox',
       tags: ['promotions'],
+      riskLevel: 'suspicious', // FIXED: Added missing property
     },
     {
-        id: '4',
-        from: { name: 'Charlie', email: 'charlie@example.com', avatar: 'https://i.pravatar.cc/150?u=charlie' },
-        subject: 'Re: Your submission',
-        snippet: 'Thanks for your submission, we will review it shortly.',
-        body: '<p>Hi,</p><p>Thanks for your submission, we will review it shortly.</p><p>Regards,</p><p>Charlie</p>',
-        date: '2024-05-18T12:00:00Z',
-        unread: false,
-        starred: false,
-        status: 'inbox',
-        tags: [],
+      id: '4',
+      from: { name: 'Charlie', email: 'charlie@example.com', avatar: 'https://i.pravatar.cc/150?u=charlie' },
+      subject: 'Re: Your submission',
+      snippet: 'Thanks for your submission, we will review it shortly.',
+      body: '<p>Hi,</p><p>Thanks for your submission, we will review it shortly.</p><p>Regards,</p><p>Charlie</p>',
+      date: '2024-05-18T12:00:00Z',
+      unread: false,
+      starred: false,
+      status: 'inbox',
+      tags: [],
+      riskLevel: 'safe', // FIXED: Added missing property
     },
     {
-        id: '5',
-        from: { name: 'Diana', email: 'diana@example.com', avatar: 'https://i.pravatar.cc/150?u=diana' },
-        subject: 'Weekend plans',
-        snippet: 'Any plans for this weekend? I was thinking of going for a hike.',
-        body: '<p>Hey,</p><p>Any plans for this weekend? I was thinking of going for a hike. Let me know if you are interested!</p><p>Best,</p><p>Diana</p>',
-        date: '2024-05-17T18:00:00Z',
-        unread: false,
-        starred: true,
-        status: 'inbox',
-        tags: ['social'],
+      id: '5',
+      from: { name: 'Diana', email: 'diana@example.com', avatar: 'https://i.pravatar.cc/150?u=diana' },
+      subject: 'Weekend plans',
+      snippet: 'Any plans for this weekend? I was thinking of going for a hike.',
+      body: '<p>Hey,</p><p>Any plans for this weekend? I was thinking of going for a hike. Let me know if you are interested!</p><p>Best,</p><p>Diana</p>',
+      date: '2024-05-17T18:00:00Z',
+      unread: false,
+      starred: true,
+      status: 'inbox',
+      tags: ['social'],
+      riskLevel: 'safe', // FIXED: Added missing property
     },
     {
       id: '6',
@@ -117,8 +121,9 @@ export const inboxEmails: InboxEmail[] = [
       date: '2024-05-21T11:00:00Z',
       unread: true,
       starred: false,
-      status: 'trash',
+      status: 'inbox',
       tags: ['security', 'alert'],
+      riskLevel: 'spam', // FIXED: Added missing property
     }
 ];
 
@@ -129,5 +134,25 @@ export const sentEmails: SentEmail[] = [
       subject: 'Re: Project discussion',
       body: '<p>Great ideas, Alice. Let\'s schedule a meeting to go over them in detail.</p>',
       date: '2024-05-20T11:00:00Z',
+      riskLevel: 'safe',
+      starred: false, // FIXED: Added missing property
+    },
+    {
+      id: 'sent-2',
+      to: { name: 'Support', email: 'support@example.com' },
+      subject: 'Issue with my account',
+      body: '<p>I\'m having trouble accessing my account. Can you help me reset my password?</p>',
+      date: '2024-05-19T15:30:00Z',
+      riskLevel: 'low',
+      starred: true, // FIXED: Added missing property
+    },
+    {
+      id: 'sent-3',
+      to: { name: 'Marketing', email: 'marketing@example.com' },
+      subject: 'Campaign proposal',
+      body: '<p>Here\'s my proposal for the upcoming marketing campaign. Let me know your thoughts.</p>',
+      date: '2024-05-18T09:45:00Z',
+      riskLevel: 'medium',
+      starred: false, // FIXED: Added missing property
     },
 ];

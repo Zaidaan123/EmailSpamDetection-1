@@ -46,7 +46,7 @@ export type MockEmail = {
   urlList: string[];
 };
 
-export type EmailRiskLevel = 'low' | 'medium' | 'high' | 'analyzing' | 'unknown';
+export type EmailRiskLevel = 'low' | 'medium' | 'high' | 'analyzing' | 'unknown' | 'safe' | 'suspicious' | 'spam';
 
 export type InboxEmail = {
     id: string;
@@ -75,6 +75,8 @@ export type SentEmail = {
   subject: string;
   body: string;
   date: string;
+  riskLevel?: EmailRiskLevel;
+  starred: boolean;
 };
 
 export type EmailForAnalysis = DetectPhishingEmailInput;

@@ -15,7 +15,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Archive, Bot, Clock, Loader2, Mail as MailIcon, Reply, Trash, FileText, Shield, ShieldCheck, ShieldAlert, Star } from 'lucide-react';
+import { Archive, Bot, Clock, Loader2, Mail as MailIcon, Reply, Trash, FileText, Shield, ShieldCheck, ShieldAlert, Star, Flag } from 'lucide-react';
+import { EmailFlagIcon } from "@/components/guardian-mail/email-flag-icon";
 import { useDashboardState } from '@/hooks/use-dashboard-state';
 import { summarizeEmailAction, analyzeUrlAction, analyzeEmailAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
@@ -25,7 +26,9 @@ import { useEmailState } from '@/hooks/use-email-state';
 import { useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { RiskTag } from './risk-tag';
 
+// Keep the RiskIcon for backward compatibility
 const RiskIcon = ({ riskLevel }: { riskLevel?: EmailRiskLevel }) => {
     if (!riskLevel || riskLevel === 'unknown') return null;
     if (riskLevel === 'analyzing') {
@@ -34,11 +37,14 @@ const RiskIcon = ({ riskLevel }: { riskLevel?: EmailRiskLevel }) => {
 
     const icons = {
         low: { Icon: ShieldCheck, color: 'text-green-500', label: 'Low Risk' },
+        safe: { Icon: ShieldCheck, color: 'text-green-500', label: 'Safe' },
         medium: { Icon: ShieldAlert, color: 'text-yellow-500', label: 'Medium Risk' },
+        suspicious: { Icon: ShieldAlert, color: 'text-yellow-500', label: 'Suspicious' },
         high: { Icon: ShieldAlert, color: 'text-red-500', label: 'High Risk' },
+        spam: { Icon: ShieldAlert, color: 'text-red-500', label: 'Spam' },
     };
 
-    const { Icon, color, label } = icons[riskLevel];
+    const { Icon, color, label } = icons[riskLevel] || { Icon: Shield, color: 'text-gray-500', label: 'Unknown Risk' };
 
     return (
         <TooltipTrigger asChild>
@@ -185,6 +191,7 @@ export function Inbox() {
         senderIp: '203.0.113.15', 
         emailBody: activeEmail.body,
         urlList: urls,
+        sensitivity: 0.5, // Adding default sensitivity value
       };
 
       setAnalyzeEmailFromInbox(emailDataForAnalysis);
@@ -364,7 +371,7 @@ export function Inbox() {
                     onClick={() => setActiveEmailId(email.id)}
                     className={cn(
                       'flex items-start gap-2 p-3 text-left text-sm transition-colors cursor-pointer border-b',
-                      'hover:bg-accent',
+                      'hover:bg-accent/50 hover:text-foreground',
                       activeEmailId === email.id && 'bg-accent',
                       email.unread && 'bg-primary/5'
                     )}
@@ -379,6 +386,9 @@ export function Inbox() {
                       <button onClick={(e) => toggleStarred(e, email.id)}>
                         <Star className={cn("size-4", email.starred ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground')} />
                       </button>
+                      {email.riskLevel && email.riskLevel !== 'unknown' && (
+                        <EmailFlagIcon riskLevel={email.riskLevel} />
+                      )}
                     </div>
                     <div className="flex-1 overflow-hidden" onClick={() => setActiveEmailId(email.id)}>
                         <div className="flex items-center justify-between">
@@ -389,9 +399,11 @@ export function Inbox() {
                             {format(new Date(email.date), 'PP')}
                           </p>
                         </div>
-                         <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 mb-1">
                             <Tooltip>
-                                <RiskIcon riskLevel={email.riskLevel} />
+                                <TooltipTrigger asChild>
+                                    <div><RiskIcon riskLevel={email.riskLevel} /></div>
+                                </TooltipTrigger>
                                 <TooltipContent>
                                     <p>{email.riskLevel === 'analyzing' ? 'Analyzing...' : `This email is considered ${email.riskLevel} risk.`}</p>
                                 </TooltipContent>
@@ -399,6 +411,11 @@ export function Inbox() {
                             <p className={cn("text-sm truncate", email.unread && "font-bold")}>{email.subject}</p>
                         </div>
                          <p className="text-xs text-muted-foreground line-clamp-1">{email.snippet}</p>
+                         {email.riskLevel && email.riskLevel !== 'unknown' && (
+                            <div className="mt-1">
+                              <RiskTag riskLevel={email.riskLevel} />
+                            </div>
+                          )}
                     </div>
                   </div>
                 ))}
@@ -431,7 +448,19 @@ export function Inbox() {
                     </Alert>
                   )}
                   <div className="flex justify-between items-start">
-                    <h2 className="text-2xl font-bold font-headline mb-4">{activeEmail.subject}</h2>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-2xl font-bold font-headline">{activeEmail.subject}</h2>
+                        {activeEmail.riskLevel && activeEmail.riskLevel !== 'unknown' && (
+                          <EmailFlagIcon riskLevel={activeEmail.riskLevel} size="lg" />
+                        )}
+                      </div>
+                      {activeEmail.riskLevel && activeEmail.riskLevel !== 'unknown' && (
+                        <div className="w-24 mb-2">
+                          <RiskTag riskLevel={activeEmail.riskLevel} />
+                        </div>
+                      )}
+                    </div>
                     <button onClick={(e) => toggleStarred(e, activeEmail.id)}>
                         <Star className={cn("size-5", activeEmail.starred ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground hover:text-yellow-400')} />
                     </button>

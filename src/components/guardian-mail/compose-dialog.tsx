@@ -1,10 +1,10 @@
-
 'use client';
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { v4 as uuidv4 } from 'uuid'; // Import uuid to generate unique IDs
 import {
   Dialog,
   DialogContent,
@@ -39,7 +39,7 @@ export function ComposeDialog({ open, onOpenChange, onEmailSent }: ComposeDialog
   const { toast } = useToast();
   const [isSending, setIsSending] = useState(false);
   const { user } = useUser();
-  const { setSentEmails, setInboxEmails } = useEmailState();
+  const { setInboxEmails } = useEmailState();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -53,7 +53,7 @@ export function ComposeDialog({ open, onOpenChange, onEmailSent }: ComposeDialog
     setTimeout(() => {
       const now = new Date().toISOString();
       const newSentEmail: SentEmail = {
-        id: `sent-${Date.now()}`,
+        id: uuidv4(), // FIXED: Use a truly unique ID
         to: {
           name: values.recipient.split('@')[0] || 'Recipient',
           email: values.recipient,
@@ -68,7 +68,7 @@ export function ComposeDialog({ open, onOpenChange, onEmailSent }: ComposeDialog
 
       // "Deliver" the email to the recipient's inbox
       const newInboxEmail: InboxEmail = {
-        id: `inbox-${Date.now()}`,
+        id: uuidv4(), // FIXED: Use a truly unique ID
         from: {
           name: user?.email?.split('@')[0] || 'Sender',
           email: user?.email || 'sender@example.com',
@@ -84,9 +84,7 @@ export function ComposeDialog({ open, onOpenChange, onEmailSent }: ComposeDialog
         tags: [],
       };
 
-      // This assumes the recipient exists in our mock/local system
-      // In a real app, this would be a backend operation.
-      // Here, we just add it to the global inbox list.
+      // Add the new email to the global inbox list
       setInboxEmails(prev => [newInboxEmail, ...prev]);
 
       setIsSending(false);
@@ -151,8 +149,8 @@ export function ComposeDialog({ open, onOpenChange, onEmailSent }: ComposeDialog
               <DialogClose asChild>
                 <Button type="button" variant="ghost">Cancel</Button>
               </DialogClose>
-              <Button type="submit" disabled={isSending}>
-                {isSending ? <Loader2 className="animate-spin" /> : <Send />}
+              <Button type="submit" disabled={isSending} className="flex items-center gap-2">
+                {isSending ? <Loader2 className="animate-spin" /> : <Send size={16} />}
                 Send
               </Button>
             </DialogFooter>
